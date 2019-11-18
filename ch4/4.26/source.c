@@ -1,23 +1,11 @@
-#include <stdlib.h>
-#include <string.h>
-#include <pthread.h>
 #include <stdio.h>
-#include <stdbool.h>
 #include <unistd.h>
-#include <ctype.h>
+#include <pthread.h>
 #include <limits.h>
+#include "../../lib/parser.h"
+#include "../../lib/container.h"
 
-#define SIZE 100
 
-struct vector {
-  int *_v;
-  int _len;
-  int _capacity;
-};
-
-bool is_integer(char*);
-void allocate_space(struct vector*);
-void v_push(struct vector*, int);
 void* cal_fibonaccis(void*);
 
 static struct vector _fibs = {NULL, 0, 0};
@@ -52,30 +40,6 @@ int main(int argc, char** argv){
   return 0;
 }
 
-bool is_integer(char* str){
-  int len = strlen(str);
-  if(len == 0) return false;
-  for(int i = 0; i < len; i++){
-    if(!isdigit(str[i])) return false;
-  }
-  return true;
-}
-
-void allocate_space(struct vector* v){
-  int *tmp = (int*)malloc((v->_capacity + SIZE) * sizeof(int));
-  memcpy(tmp, v->_v, v->_capacity * sizeof(int));
-  free(v->_v);
-  v->_v = tmp;
-  v->_capacity += SIZE;
-}
-
-void v_push(struct vector *v, int n){
-  if(v->_len == v->_capacity)
-    allocate_space(v);
-
-  v->_v[v->_len++] = n;
-}
-
 void* cal_fibonaccis(void* param){
   if(_bound >= 1)
     v_push(&_fibs, 0);
@@ -93,4 +57,3 @@ void* cal_fibonaccis(void* param){
   }
   pthread_exit(0);
 }
-
