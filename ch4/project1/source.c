@@ -6,11 +6,24 @@
 
 #define DIM 9
 #define SUB_DIM 3
+#define ROW_IDX 9
+#define COL_IDX 10
+
+typedef struct {
+  int row;
+  int column;
+} parameters;
 
 int setup(char*);
 int parseRow(const char*, int);
 
+void* validate_row(void*);
+void* validate_column(void*);
+void* validate_sub(void*);
+bool isValid(const int*);
+
 int _sudoku[DIM][DIM];
+bool _results[11] = { false };
 
 int main(int argc, char** argv){
   printf("Sudoku Solution Validator!\n");
@@ -35,6 +48,44 @@ int main(int argc, char** argv){
       printf("%d ", _sudoku[i][j]);
     }
     printf("\n");
+  }
+
+  parameters* params[DIM] = { NULL };
+  pthread_t r_tid, c_tid, s_tid[DIM];
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+
+  pthread_create(&r_tid, &attr, validate_row, NULL);
+  pthread_create(&c_tid, &attr, validate_column, NULL);
+  for(int i = 0; i < SUB_DIM; i++){
+    for(int j = 0; j < SUB_DIM; j++){
+      int idx = i * SUB_DIM + j;
+      params[idx] = (parameters*)malloc(sizeof(parameters));
+      params[idx]->row = i * SUB_DIM, params[idx]->column = j * SUB_DIM;
+      pthread_create(&s_tid[idx], &attr, validate_sub, params[idx]);
+    }
+  }
+
+  pthread_join(r_tid, NULL);
+  pthread_join(c_tid, NULL);
+  for(int i = 0; i < DIM; i++){
+    pthread_join(s_tid[i], NULL);
+    free(params[i]);
+  }
+
+  bool valid = true;
+  for(int i = 0; i < 11; i++){
+    if(!_results[i]){
+      valid = false;
+      break;
+    }
+  }
+
+  if(valid){
+    printf("Output: Sudoku is valid\n");
+  }
+  else{
+    printf("Output: Sudoku is invalid\n");
   }
 
   return 0;
@@ -106,4 +157,66 @@ int parseRow(const char *str, int i){
   free(buf);
 
   return 0;
+}
+
+void* validate_row(void* param){
+  bool valid = true;
+  int arr[DIM];
+  for(int i = 0; i < DIM; i++){
+    for(int j = 0; j < DIM; j++){
+      arr[j] = _sudoku[i][j];
+    }
+    if(!isValid(arr)){
+      valid = false;
+      break;
+    }
+  }
+  _results[ROW_IDX] = valid;
+  pthread_exit(0);
+}
+
+void* validate_column(void* param){
+  bool valid = true;
+  int arr[DIM];
+  for(int j = 0; j < DIM; j++){
+    for(int i = 0; i < DIM; i++){
+      arr[i] = _sudoku[i][j];
+    }
+    if(!isValid(arr)){
+      valid = false;
+      break;
+    }
+  }
+  _results[COL_IDX] = valid;
+  pthread_exit(0);
+}
+
+void* validate_sub(void* param){
+  parameters *pos = (parameters*)param;
+  int x = pos->row, y = pos->column;
+  if(x < 0 || x + SUB_DIM > DIM) goto EXIT;
+  if(y < 0 || y + SUB_DIM > DIM) goto EXIT;
+  int idx_x = x / SUB_DIM, idx_y = y / SUB_DIM;
+  int idx = idx_x * SUB_DIM + idx_y;
+  int arr[DIM];
+  for(int i = 0; i < SUB_DIM; i++){
+    for(int j = 0; j < SUB_DIM; j++){
+      arr[i * SUB_DIM + j] = _sudoku[x+i][y+j];
+    }
+  }
+  _results[idx] = isValid(arr);
+
+EXIT:
+  pthread_exit(0);
+}
+
+bool isValid(const int *arr){
+  bool ret[DIM] = { false };
+  for(int i = 0; i < DIM; i++){
+    int val = arr[i];
+    if(val <= 0 || val > DIM) return false;
+    if(ret[val-1]) return false;
+    ret[val-1] = true;
+  }
+  return true;
 }
