@@ -16,6 +16,7 @@ typedef struct {
 
 int setup(char*);
 int parseRow(const char*, int);
+int parseRow2(const char*, int);
 
 void* validate_row(void*);
 void* validate_column(void*);
@@ -113,7 +114,7 @@ int setup(char* f){
     }
     else{
       pos = 0;
-      if(i >= DIM || parseRow(str, i++)){
+      if(i >= DIM || parseRow2(str, i++)){
         printf("Invalid data\n");
         return 1;
       }
@@ -157,6 +158,53 @@ int parseRow(const char *str, int i){
   free(buf);
 
   return 0;
+}
+
+int parseRow2(const char *str, int i){
+  if(!str) return 1;
+  int len = strlen(str);
+  if(str[len-1] == '\n') len--;
+
+  bool looping = true;
+  struct vector arr = {NULL, 0, 0, PRI_TYPE_STRING};
+  const char *ptr = str;
+  char *buf = (char*)malloc((len + 1) + sizeof(char));
+  while(looping){
+    const char *tmp = strchr(ptr, ',');
+    int l;
+    if(tmp){
+      l = tmp - ptr;
+    }
+    else{
+      l = str + len - ptr;
+      looping = false;
+    }
+    if(l < 0) l = 0;
+    strncpy(buf, ptr, l);
+    buf[l] = '\0';
+    v_push(&arr, buf);
+    if(ptr < str + len) ptr = ptr + l + 1;
+  }
+
+  int ret = 0;
+  if(arr._len != DIM){
+    ret = 1;
+    goto EXIT;
+  }
+
+  char **arr_p = (char**)arr._v;
+  for(int j = 0; j < arr._len; j++){
+    int l = strlen(arr_p[j]);
+    if(l <= 0 || !is_integer(arr_p[j])){
+      ret = 1;
+      goto EXIT;
+    }
+    _sudoku[i][j] = atoi(arr_p[j]);
+  }
+
+EXIT:
+  v_clear(&arr);
+  return ret;
 }
 
 void* validate_row(void* param){

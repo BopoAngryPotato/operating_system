@@ -8,7 +8,7 @@
 
 void* cal_fibonaccis(void*);
 
-static struct vector _fibs = {NULL, 0, 0};
+static struct vector _fibs = {NULL, 0, 0, PRI_TYPE_INT};
 static int _bound;
 
 int main(int argc, char** argv){
@@ -32,7 +32,8 @@ int main(int argc, char** argv){
 
   printf("Output %d numbers in Fibonacci sequence:\n", _fibs._len);
   for(int i = 0; i < _fibs._len; i++){
-    printf("%d", _fibs._v[i]);
+    int *p = (int*)_fibs._v;
+    printf("%d", p[i]);
     if(i != _fibs._len - 1) printf(", ");
   }
   printf("\n");
@@ -41,19 +42,26 @@ int main(int argc, char** argv){
 }
 
 void* cal_fibonaccis(void* param){
-  if(_bound >= 1)
-    v_push(&_fibs, 0);
+  int val;
+  if(_bound >= 1){
+    val = 0;
+    v_push(&_fibs, &val);
+  }
 
-  if(_bound >= 2)
-    v_push(&_fibs, 1);
+  if(_bound >= 2){
+    val = 1;
+    v_push(&_fibs, &val);
+  }
 
   for(int i = 2; i < _bound; i++){
-    int n_1 = _fibs._v[i-1], n_2 = _fibs._v[i-2];
+    int *p = (int*)_fibs._v;
+    int n_1 = p[i-1], n_2 = p[i-2];
     if(INT_MAX - n_1 < n_2){
       printf("Exceed integer limit! Stop!\n");
       break;
     }
-    v_push(&_fibs, n_1 + n_2);
+    val = n_1 + n_2;
+    v_push(&_fibs, &val);
   }
   pthread_exit(0);
 }
