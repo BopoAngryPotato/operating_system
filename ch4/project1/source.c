@@ -100,7 +100,7 @@ int setup(char* f){
   }
   char *str = (char*)malloc((SIZE+1) * sizeof(char)), *buf = (char*)malloc((SIZE+1) * sizeof(char));
   int len = SIZE, pos = 0, i = 0;
-  while(fgets(buf, SIZE, fp)){
+  while(fgets(buf, SIZE+1, fp)){
     strcpy(&str[pos], buf);
     pos += SIZE;
     if(strlen(buf) == SIZE && buf[SIZE-1] != '\n' && !feof(fp)){
@@ -163,28 +163,15 @@ int parseRow(const char *str, int i){
 int parseRow2(const char *str, int i){
   if(!str) return 1;
   int len = strlen(str);
-  if(str[len-1] == '\n') len--;
-
-  bool looping = true;
-  struct vector arr = {NULL, 0, 0, PRI_TYPE_STRING};
-  const char *ptr = str;
-  char *buf = (char*)malloc((len + 1) + sizeof(char));
-  while(looping){
-    const char *tmp = strchr(ptr, ',');
-    int l;
-    if(tmp){
-      l = tmp - ptr;
-    }
-    else{
-      l = str + len - ptr;
-      looping = false;
-    }
-    if(l < 0) l = 0;
-    strncpy(buf, ptr, l);
-    buf[l] = '\0';
-    v_push(&arr, buf);
-    if(ptr < str + len) ptr = ptr + l + 1;
+  char *tmp = NULL;
+  if(str[len-1] == '\n'){
+    tmp = (char*)malloc((len + 1) + sizeof(char));
+    strcpy(tmp, str);
+    tmp[len-1] = '\0';
+    str = tmp;
   }
+  struct vector arr = {NULL, 0, 0, PRI_TYPE_STRING};
+  str_split(&arr, str, ',');
 
   int ret = 0;
   if(arr._len != DIM){
@@ -204,6 +191,7 @@ int parseRow2(const char *str, int i){
 
 EXIT:
   v_clear(&arr);
+  if(tmp) free(tmp);
   return ret;
 }
 
