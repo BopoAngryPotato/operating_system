@@ -1,5 +1,13 @@
 #include "container.h"
 
+void v_init(struct vector* v, enum primary_type type){
+  v->_v = NULL;
+  v->_len = 0;
+  v->_capacity = 0;
+  v->_type = type;
+  v_allocate_space(v);
+}
+
 void v_allocate_space(struct vector* v){
   if(v->_type <= PRI_TYPE_MIN || v->_type >= PRI_TYPE_MAX) return;
   int t_size = 0;
@@ -13,7 +21,7 @@ void v_allocate_space(struct vector* v){
   if(!t_size) return;
   tmp = malloc((v->_capacity + SIZE) * t_size);
   memcpy(tmp, v->_v, v->_len * t_size);
-  free(v->_v);
+  if(v->_capacity) free(v->_v);
   v->_v = tmp;
   v->_capacity += SIZE;
 }
@@ -37,7 +45,7 @@ void v_push(struct vector *v, const void* val){
   }
 }
 
-void v_clear(struct vector *v){
+void v_reset(struct vector *v){
   if(v->_type <= PRI_TYPE_MIN || v->_type >= PRI_TYPE_MAX) return;
   
   if(v->_type == PRI_TYPE_STRING){
@@ -47,20 +55,26 @@ void v_clear(struct vector *v){
     }
   }
 
-  if(v->_v) free(v->_v);
   v->_len = 0;
+}
+
+void v_clear(struct vector *v){
+  if(v->_type <= PRI_TYPE_MIN || v->_type >= PRI_TYPE_MAX) return;
+ 
+  v_reset(v);
+  if(v->_capacity) free(v->_v);
   v->_capacity = 0;
 }
 
 void p_str_init(struct p_string *str){
-  if(str->_s) free(str->_s);
+  if(str->_capacity) free(str->_s);
   str->_s = (char*)malloc(SIZE * sizeof(char));
   str->_s[0] = '\0';
   str->_capacity = SIZE;
 }
 
 void p_str_concat(struct p_string *str, const char *s){
-  if(!str->_s)
+  if(!str->_capacity)
     p_str_init(str);
 
   int len = strlen(str->_s), slen = strlen(s);
@@ -77,7 +91,11 @@ void p_str_concat(struct p_string *str, const char *s){
   strcpy(&str->_s[len], s);
 }
 
+void p_str_reset(struct p_string *str){
+  if(str->_capacity) str->_s[0] = '\0';
+}
+
 void p_str_clear(struct p_string *str){
-  if(str->_s) free(str->_s);
+  if(str->_capacity) free(str->_s);
   str->_capacity = 0;
 }

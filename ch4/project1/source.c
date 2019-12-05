@@ -15,6 +15,7 @@ typedef struct {
 } parameters;
 
 int setup(char*);
+int setup2(char*);
 int parseRow(const char*, int);
 int parseRow2(const char*, int);
 
@@ -38,7 +39,7 @@ int main(int argc, char** argv){
     return 1;
   }
 
-  if(setup(argv[1])){
+  if(setup2(argv[1])){
     printf("Failed to setup Sudoku\n");
     return 1;
   }
@@ -132,6 +133,42 @@ int setup(char* f){
   return 0;
 }
 
+int setup2(char* f){
+  int ret = 0;
+  FILE *fp;
+  char *buf = (char*)malloc((SIZE+1) * sizeof(char));
+  struct p_string str;
+  p_str_init(&str);
+  if((fp = fopen(f, "r")) == NULL){
+    printf("Cannot open file %s\n", f);
+    ret = 1;
+    goto EXIT;
+  }
+  int i = 0;
+  while(fgets(buf, SIZE+1, fp)){
+    p_str_concat(&str, buf);
+    if(!(strlen(buf) == SIZE && buf[SIZE-1] != '\n' && !feof(fp))){
+      if(i >= DIM || parseRow2(str._s, i++)){
+        printf("Invalid data\n");
+        ret = 1;
+        goto EXIT;
+      }
+      p_str_reset(&str);
+    }
+  }
+
+  if(i != DIM){
+    printf("Invalid data\n");
+    ret = 1;
+    goto EXIT;
+  }
+
+EXIT:
+  free(buf);
+  p_str_clear(&str);
+  return ret;
+}
+
 int parseRow(const char *str, int i){
   if(!str) return 1;
   int j = 0, len = strlen(str);
@@ -170,7 +207,8 @@ int parseRow2(const char *str, int i){
     tmp[len-1] = '\0';
     str = tmp;
   }
-  struct vector arr = {NULL, 0, 0, PRI_TYPE_STRING};
+  struct vector arr;
+  v_init(&arr, PRI_TYPE_STRING);
   str_split(&arr, str, ',');
 
   int ret = 0;

@@ -25,11 +25,14 @@ struct p_string {
   int _capacity;
 };
 
+void v_init(struct vector*, enum primary_type);
 void v_allocate_space(struct vector*);
 void v_push(struct vector*, const void*);
+void v_reset(struct vector*);
 void v_clear(struct vector*);
 
 void p_str_init(struct p_string *str);
 void p_str_concat(struct p_string *str, const char*);
+void p_str_reset(struct p_string *str);
 void p_str_clear(struct p_string *str);
 #endif

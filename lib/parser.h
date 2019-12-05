@@ -7,4 +7,5 @@
 #define P_LIB_PARSER
 bool is_integer(char*);
 void str_split(struct vector*, const char*, const char);
+int read_file(struct vector*, const char*);
 #endif

@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "parser.h"
 
 bool is_integer(char* str){
@@ -32,4 +33,30 @@ void str_split(struct vector *arr, const char *str, const char delim){
     ptr = ptr + l;
     if(tmp) ptr++;
   }
+}
+
+int read_file(struct vector *arr, const char *f){
+  if(arr->_type != PRI_TYPE_STRING) return 1;
+  int ret = 0;
+  FILE *fp;
+  char *buf = (char*)malloc((SIZE+1) * sizeof(char));
+  struct p_string str;
+  p_str_init(&str);
+  if((fp = fopen(f, "r")) == NULL){
+    printf("Cannot open file %s\n", f);
+    ret = 1;
+    goto EXIT;
+  }
+  while(fgets(buf, SIZE+1, fp)){
+    p_str_concat(&str, buf);
+    if(!(strlen(buf) == SIZE && buf[SIZE-1] != '\n' && !feof(fp))){
+      v_push(arr, str._s);
+      p_str_reset(&str);
+    }
+  }
+
+EXIT:
+  free(buf);
+  p_str_clear(&str);
+  return ret;
 }
