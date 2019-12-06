@@ -67,7 +67,6 @@ void v_clear(struct vector *v){
 }
 
 void p_str_init(struct p_string *str){
-  if(str->_capacity) free(str->_s);
   str->_s = (char*)malloc(SIZE * sizeof(char));
   str->_s[0] = '\0';
   str->_capacity = SIZE;

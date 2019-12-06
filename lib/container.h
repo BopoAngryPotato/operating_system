@@ -3,8 +3,7 @@
 
 #ifndef P_LIB_CONTAINER
 #define P_LIB_CONTAINER
-//#define SIZE 100
-#define SIZE 10
+#define SIZE 100
 
 enum primary_type {
   PRI_TYPE_MIN,
