@@ -4,7 +4,7 @@ all: a.out
 a.out: source.c ../../lib/libutil.so
 	gcc -L/home/pozhang/projects/operating_systems/lib -Wl,-rpath=/home/pozhang/projects/operating_systems/lib -Wall -g -pthread source.c -lutil
 
-../../lib/libutil.so: parser.c parser.h container.c container.h
+../../lib/libutil.so: 
 	make -C ../../lib
 
 clean: 
