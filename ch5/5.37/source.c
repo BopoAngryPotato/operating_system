@@ -8,7 +8,7 @@
 
 #define STR_SIZE 100
 #define MAX_RESOURCES 5
-#define CYCLE 50
+#define CYCLE 20
 
 struct node {
   sem_t* sem;
@@ -33,30 +33,42 @@ int decrease_count(int);
 int increase_count(int);
 
 void* monitor(void*);
+void* light_runner(void*);
 void* runner(void*);
 
-int available_resources = MAX_RESOURCES;
+int available_resources = MAX_RESOURCES, obt = 0, rel = 0;
 struct sem_list p_s_list;
-pthread_mutex_t resources_mtx, print_mtx;
+pthread_mutex_t resources_mtx, obt_mtx, rel_mtx, print_mtx;
 bool mc = true;
 int params[CYCLE];
 
 int main(){
-  char str[STR_SIZE] = { 0 };
+  char str[STR_SIZE] = { 0 }, c;
   pthread_t monitor_tid, t_tid;
   pthread_attr_t attr;
   printf("Run resource allocator!\n");
   pthread_mutex_init(&resources_mtx, NULL);
+  pthread_mutex_init(&obt_mtx, NULL);
+  pthread_mutex_init(&rel_mtx, NULL);
   pthread_mutex_init(&print_mtx, NULL);
   init_sem_list(&p_s_list);
+
+  do{
+    printf("Please choose type of runner - light runner (l/L), normal runner (n/N):");
+    fgets(str, STR_SIZE, stdin);
+    c = str[0];
+  }while(c != 'l' && c != 'L' && c != 'n' && c != 'N');
 
   pthread_attr_init(&attr);
   pthread_create(&monitor_tid, &attr, monitor, NULL);
   for(int i = 0; i < CYCLE; i++){
     params[i] = rand()%5+1;
-    pthread_create(&t_tid, &attr, runner, &params[i]);
+    if(c == 'l' || c =='L')
+      pthread_create(&t_tid, &attr, light_runner, &params[i]);
+    else 
+      pthread_create(&t_tid, &attr, runner, &params[i]);
     pthread_mutex_lock(&print_mtx);
-    printf("Create thread %lu, count=%d.\n", t_tid, params[i]);
+    printf("Main, i=%d, create thread %lu, count=%d.\n", i, t_tid, params[i]);
     pthread_mutex_unlock(&print_mtx);
   }
 
@@ -169,6 +181,34 @@ void* monitor(void* param){
   pthread_exit(0);
 }
 
+void* light_runner(void* param){
+  int count = *((int*)param);
+  unsigned long pid = pthread_self();
+  if(count <= 0 || count > MAX_RESOURCES){
+    pthread_mutex_lock(&print_mtx);
+    printf("Runner %lu, invalid count=%d\n", pid, count);
+    pthread_mutex_unlock(&print_mtx);
+    pthread_exit(0);
+  }
+
+  while(decrease_count(count))
+    ;
+  pthread_mutex_lock(&obt_mtx);
+  pthread_mutex_lock(&print_mtx);
+  printf("Runner %lu, obtain resource count=%d, obt=%d\n", pid, count, ++obt);
+  pthread_mutex_unlock(&print_mtx);
+  pthread_mutex_unlock(&obt_mtx);
+  sleep(10);
+  increase_count(count);
+ 
+  pthread_mutex_lock(&rel_mtx);
+  pthread_mutex_lock(&print_mtx);
+  printf("Runner %lu, release resource count=%d, rel=%d\n", pid, count, ++rel);
+  pthread_mutex_unlock(&print_mtx);
+  pthread_mutex_unlock(&rel_mtx);
+  pthread_exit(0);
+}
+
 void* runner(void* param){
   int count = *((int*)param);
   unsigned long pid = pthread_self();
@@ -186,15 +226,19 @@ void* runner(void* param){
   while(decrease_count(count)){
     sem_wait(&sem);
   }
+  pthread_mutex_lock(&obt_mtx);
   pthread_mutex_lock(&print_mtx);
-  printf("Runner %lu, obtain resource count=%d\n", pid, count);
+  printf("Runner %lu, obtain resource count=%d, obt=%d\n", pid, count, ++obt);
   pthread_mutex_unlock(&print_mtx);
+  pthread_mutex_unlock(&obt_mtx);
   sleep(10);
   increase_count(count);
  
+  pthread_mutex_lock(&rel_mtx);
   pthread_mutex_lock(&print_mtx);
-  printf("Runner %lu, release resource count=%d\n", pid, count);
+  printf("Runner %lu, release resource count=%d, rel=%d\n", pid, count, ++rel);
   pthread_mutex_unlock(&print_mtx);
+  pthread_mutex_unlock(&rel_mtx);
   remove_sem_list(&p_s_list, &sem);
   broadcast_sem_list(&p_s_list);
   pthread_exit(0);
