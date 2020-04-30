@@ -28,14 +28,20 @@ int main(int argc, char** argv){
     printf("Please type number of cycles to run: ");
     fgets(str, STR_SIZE, stdin);
     int len = strlen(str);
-    str[len-1] = '\0';
+    if(len > 0){
+      if(str[len-1] == '\n')
+        str[len-1] = '\0';
+    }
     _cycles = atoi(str);
   }while(!is_integer(str) || _cycles <= 0 || _cycles > INT_MAX / 2);
   do{
     printf("Please type number of points for each cycle: ");
     fgets(str, STR_SIZE, stdin);
     int len = strlen(str);
-    str[len-1] = '\0';
+    if(len > 0){
+      if(str[len-1] == '\n')
+        str[len-1] = '\0';
+    }
     _count = atoi(str);
   }while(!is_integer(str) || !are_params_valid(_cycles, _count));
 
