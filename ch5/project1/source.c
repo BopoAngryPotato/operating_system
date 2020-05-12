@@ -38,7 +38,7 @@ bool check_ta_and_take_seat(struct Student*);
 void pick_student();
 int random_time();
 
-static pthread_mutex_t ta_mtx;
+static pthread_mutex_t ta_mtx, print_mtx;
 static int students_count = 0, _round = 0;;
 static struct Teaching_assistant ta;
 
@@ -50,6 +50,7 @@ int main(int argc, char** argv){
 
   printf("Run Sleeping Teaching Assistant!\n");
   pthread_mutex_init(&ta_mtx, NULL);
+  pthread_mutex_init(&print_mtx, NULL);
   init_ta(&ta);
 
   do{
@@ -62,7 +63,7 @@ int main(int argc, char** argv){
     }
     students_count = atoi(str);
   }while(!is_integer(str) || students_count < 0);
-  printf("Type any symbols to exit.\n");
+  printf("Type enter to exit.\n");
 
   students = (int*)malloc(students_count * sizeof(int));
 
@@ -110,6 +111,9 @@ void* student_runner(void* param){
     sleep(random_time());
   }
   sem_wait(&self.x_sem);
+  pthread_mutex_lock(&print_mtx);
+  printf("Student %d leaves teaching assistant's office\n", self.index);
+  pthread_mutex_unlock(&print_mtx);
   pthread_exit(0);
 }
 
@@ -121,12 +125,19 @@ bool check_ta_and_take_seat(struct Student* x){
     ta.to_tutor = x;
     ret = true;
     sem_post(&ta.x_sem);
+    pthread_mutex_lock(&print_mtx);
     printf("Student %d wakes up teaching assistant.\n", x->index);
+    pthread_mutex_unlock(&print_mtx);
   }
   else if(ta.seats_taken < SEAT_COUNT){
     ta.seats[ta.seats_taken++] = x;
     ret = true;
-    printf("Student %d takes seat, seats taken %d.\n", x->index, ta.seats_taken);
+    pthread_mutex_lock(&print_mtx);
+    printf("Student %d takes seat, seats taken %d:", x->index, ta.seats_taken);
+    for(unsigned i = 0; i < ta.seats_taken; i++)
+      printf("%d ", ta.seats[i]->index);
+    printf("\n");
+    pthread_mutex_unlock(&print_mtx);
   }
   pthread_mutex_unlock(&ta_mtx);
   return ret;
@@ -134,9 +145,11 @@ bool check_ta_and_take_seat(struct Student* x){
 
 void pick_student(){
   pthread_mutex_lock(&ta_mtx);
+  pthread_mutex_lock(&print_mtx);
   printf("Teaching assistant done tutoring student %d, round %d.\n", ta.to_tutor->index, ++_round);
+  pthread_mutex_unlock(&print_mtx);
+  sem_post(&ta.to_tutor->x_sem);
   if(ta.seats_taken > 0){
-    sem_post(&ta.to_tutor->x_sem);
     ta.to_tutor = ta.seats[0];
     ta.seats_taken--;
     for(int i = 0; i < ta.seats_taken; i++){
@@ -144,11 +157,19 @@ void pick_student(){
     }
     ta.seats[ta.seats_taken] = NULL;
     sem_post(&ta.x_sem);
+    pthread_mutex_lock(&print_mtx);
+    printf("Teaching assistant picks student %d, seats taken %d: ", ta.to_tutor->index, ta.seats_taken);
+    for(unsigned i = 0; i < ta.seats_taken; i++)
+      printf("%d ", ta.seats[i]->index);
+    printf("\n");
+    pthread_mutex_unlock(&print_mtx);
   }
   else{
     ta.to_tutor = NULL;
     ta.x_state = SLEEPING;
+    pthread_mutex_lock(&print_mtx);
     printf("Teaching assistant going to sleep.\n");
+    pthread_mutex_unlock(&print_mtx);
   }
   pthread_mutex_unlock(&ta_mtx);
 }
