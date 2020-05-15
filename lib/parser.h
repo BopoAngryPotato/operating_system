@@ -8,4 +8,5 @@
 bool is_integer(char*);
 void str_split(struct vector*, const char*, const char);
 int read_file(struct vector*, const char*);
+unsigned random_number(unsigned);
 #endif

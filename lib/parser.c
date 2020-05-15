@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "parser.h"
 
 bool is_integer(char* str){
@@ -59,4 +60,9 @@ EXIT:
   free(buf);
   p_str_clear(&str);
   return ret;
+}
+
+unsigned random_number(unsigned modulus){
+  if(modulus == 0) return 0;
+  return rand() % modulus + 1;
 }

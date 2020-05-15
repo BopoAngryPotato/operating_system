@@ -175,6 +175,6 @@ void pick_student(){
 }
 
 int random_time(){
-  const int mold = 5;
-  return rand() % mold + 1;
+  const int modulus = 5;
+  return rand() % modulus + 1;
 }
