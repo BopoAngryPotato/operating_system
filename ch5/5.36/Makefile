@@ -1,12 +1,22 @@
-all: a.out
-.PHONY: all
+LIBDIR = /home/pozhang/projects/operating_system/lib
 
-a.out: source.c ../../lib/libutil.so
-	gcc -L/home/pozhang/projects/operating_system/lib -Wl,-rpath=/home/pozhang/projects/operating_system/lib -Wall -g -pthread source.c -lutil
+CC = gcc
+CFLAGS = -L$(LIBDIR) -Wl,-rpath=$(LIBDIR) -Wall -g -pthread
+LIBS = -lutil
 
-../../lib/libutil.so:
-	make -C ../../lib
+LINK_TARGET = a.out
+SRCS = source.c
+
+.PHONY: all clean $(LIBDIR)
+all: $(LINK_TARGET) 
+	@echo "Make done!"
+
+$(LINK_TARGET): $(SRCS) $(LIBDIR) 
+	$(CC) $(CFLAGS) $(SRCS) $(LIBS)
+
+$(LIBDIR):
+	$(MAKE) -C $@ $(MAKECMDGOALS) 
 
 clean: 
 	rm -f *.o *.out
-	make -C ../../lib clean
+	$(MAKE) -C $(LIBDIR) clean

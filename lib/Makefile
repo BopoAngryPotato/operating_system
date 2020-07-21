@@ -1,13 +1,23 @@
 .RECIPEPREFIX = >
 
-libutil.so: container.o parser.o
-> gcc -shared parser.o container.o -o libutil.so
+CC = gcc
+C_COMPILE_FLAGS =  -c -g -Wall -fpic
+C_LINK_FLAGS = -shared
 
-parser.o: parser.c parser.h
-> gcc -c -g -Wall -fpic parser.c
+LINK_TARGET = libutil.so
+OBJS = container.o parser.o
+DEPS = $(subst .o,.h,$(OBJS))
 
-container.o: container.c container.h
-> gcc -c -g -Wall -fpic container.c
+.PHONY: all clean
+
+all: $(LINK_TARGET)
+>	@echo "Make libraries done!"
+
+$(LINK_TARGET): $(OBJS)
+> $(CC) $(C_LINK_FLAGS) $^ -o $@
+
+%.o: %.c $(DEPS) 
+> $(CC) $(C_COMPILE_FLAGS) $^ 
 
 clean:
 > rm -f *.o *.so
