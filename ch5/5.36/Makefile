@@ -1,4 +1,4 @@
-LIBDIR = /home/pozhang/projects/operating_system/lib
+LIBDIR = $${HOME}/projects/operating_system/lib
 
 CC = gcc
 CFLAGS = -L$(LIBDIR) -Wl,-rpath=$(LIBDIR) -Wall -g -pthread
@@ -11,7 +11,7 @@ SRCS = source.c
 all: $(LINK_TARGET) 
 	@echo "Make done!"
 
-$(LINK_TARGET): $(SRCS) $(LIBDIR) 
+$(LINK_TARGET): $(SRCS) $(LIBDIR)
 	$(CC) $(CFLAGS) $(SRCS) $(LIBS)
 
 $(LIBDIR):
