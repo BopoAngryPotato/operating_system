@@ -1,21 +1,25 @@
 LIBDIR = $${HOME}/projects/operating_system/lib
 
 CC = gcc
-CFLAGS = -L$(LIBDIR) -Wl,-rpath=$(LIBDIR) -Wall -g -pthread
+C_COMPILE_FLAGS = -Wall -g -c 
+C_LINK_FLAGS = -L$(LIBDIR) -Wl,-rpath=$(LIBDIR) -Wall -pthread
 LIBS = -lutil
 
 LINK_TARGET = a.out
-SRCS = source.c
+OBJS = main.o banker.o tmp.result
 
 .PHONY: all clean $(LIBDIR)
 all: $(LINK_TARGET) 
 	@echo "Make done!"
 
-$(LINK_TARGET): $(SRCS) $(LIBDIR)
-	$(CC) $(CFLAGS) $(SRCS) $(LIBS)
+$(LINK_TARGET): $(OBJS) $(LIBDIR)
+	$(CC) $(C_LINK_FLAGS) $(OBJS) $(LIBS)
+
+$(OBJS): %.o: %.c
+	$(CC) $(C_COMPILE_FLAGS) $<
 
 $(LIBDIR):
-	$(MAKE) -C $@ $(MAKECMDGOALS) 
+	$(MAKE) -C $@ $(MAKECMDGOALS)
 
 clean: 
 	rm -f *.o *.out

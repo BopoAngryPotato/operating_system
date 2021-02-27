@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include "../../lib/parser.h"
+#include "banker.h"
 
 int main(int argc, char** argv){
+  printf("Run Banker!\n");
   return 0;
 }
