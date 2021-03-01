@@ -6,7 +6,7 @@ C_LINK_FLAGS = -L$(LIBDIR) -Wl,-rpath=$(LIBDIR) -Wall -pthread
 LIBS = -lutil
 
 LINK_TARGET = a.out
-OBJS = main.o banker.o tmp.result
+OBJS = main.o banker.o
 
 .PHONY: all clean $(LIBDIR)
 all: $(LINK_TARGET) 
