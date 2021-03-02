@@ -41,6 +41,13 @@ int request_resources(int customer_num, int request[]){
   for(int i = 0; i < NUMBER_OF_RESOURCES; i++)
     if(request[i] < 0 || request[i] > need[customer_num][i]) goto EXIT;
 
+  bool allowed = true;
+  for(int i = 0; i < NUMBER_OF_RESOURCES; i++){
+    if(request[i] > available[i]){
+      allowed = false;
+      goto DECIDE;
+    }
+  }
   int *work = (int*)malloc(NUMBER_OF_RESOURCES*sizeof(int));
   memcpy(work, available, NUMBER_OF_RESOURCES*sizeof(int));
   bool *finish=(bool*)malloc(NUMBER_OF_CUSTOMERS*sizeof(bool));
@@ -68,7 +75,6 @@ int request_resources(int customer_num, int request[]){
       }
     }
   }
-  bool allowed = true;
   for(int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
     if(!finish[i]){
       allowed = false;
@@ -84,6 +90,9 @@ int request_resources(int customer_num, int request[]){
       need[customer_num][i] += request[i];
     }
   }
+  free(work);
+  free(finish);
+DECIDE:
   if(allowed){
     ret = 0;
     printf("Request by %d granted: ", customer_num);
@@ -94,8 +103,6 @@ int request_resources(int customer_num, int request[]){
   for(int i = 0; i < NUMBER_OF_RESOURCES; i++)
     printf("%d ", request[i]);
   printf("\n");
-  free(work);
-  free(finish);
 EXIT:
   pthread_mutex_unlock(&mtx);
   return ret;

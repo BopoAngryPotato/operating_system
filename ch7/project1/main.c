@@ -46,13 +46,13 @@ void* customer(void* param){
     int *request = (int*)malloc(NUMBER_OF_RESOURCES*sizeof(int));
    
     for(int i = 0; i < NUMBER_OF_RESOURCES; i++)
-      request[i] = random_number(need[id][i]);
+      request[i] = random_number(need[id][i]+1)-1;
     request_resources(id, request);
    
     sleep(random_number(SLEEP_MOD));
     
     for(int i = 0; i < NUMBER_OF_RESOURCES; i++)
-      request[i] = random_number(allocation[id][i]);
+      request[i] = random_number(allocation[id][i]+1)-1;
     release_resources(id, request);
     free(request);
   }
