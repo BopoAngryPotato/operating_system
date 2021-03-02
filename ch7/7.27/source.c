@@ -225,7 +225,7 @@ void monitor_exit_bridge(struct monitor* m, enum farmer f, unsigned long id){
 void* farmer(void* param){
   unsigned long pid = pthread_self();
   enum farmer f;
-  if(random_number(MOD) <= MOD/2) f = NORTH_FARMER;
+  if(random_number(MOD) < MOD/2) f = NORTH_FARMER;
   else f = SOUTH_FARMER;
   sleep(random_number(MOD));
   monitor_enter_bridge(&mn, f, pid);

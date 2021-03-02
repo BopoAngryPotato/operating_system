@@ -5,8 +5,6 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-extern int NUMBER_OF_CUSTOMERS, NUMBER_OF_RESOUCES;
-
+int init_banker(int, int, int[]);
 int request_resouces(int, int[]);
 int release_resouces(int, int[]);
-

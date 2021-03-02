@@ -1,13 +1,45 @@
 #include "banker.h"
+#include "../../lib/parser.h"
 
-int NUMBER_OF_CUSTOMERS, NUMBER_OF_RESOURCES;
-pthread_mutex_t mtx;
-
+static int NUMBER_OF_CUSTOMERS, NUMBER_OF_RESOURCES;
+static pthread_mutex_t mtx;
 static int *available, **maximum, **allocation, **need;
 
+int init_banker(int number_of_customers, int number_of_resources, int resources[]){
+  if(number_of_customers <= 0 || number_of_resources <= 0) return -1;
+  for(int i = 0; i < number_of_resources; i++)
+    if(resources[i] <= 0) return -1;
+
+  pthread_mutex_init(&mtx, NULL);
+  NUMBER_OF_CUSTOMERS = number_of_customers;
+  NUMBER_OF_RESOURCES = number_of_resources;
+  available = (int*)malloc(NUMBER_OF_RESOURCES*sizeof(int));
+  maximum = (int**)malloc(NUMBER_OF_CUSTOMERS*sizeof(int*));
+  allocation = (int**)malloc(NUMBER_OF_CUSTOMERS*sizeof(int*));
+  need = (int**)malloc(NUMBER_OF_CUSTOMERS*sizeof(int*));
+  for(int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
+    maximum[i] = (int*)malloc(NUMBER_OF_RESOURCES*sizeof(int));
+    allocation[i] = (int*)malloc(NUMBER_OF_RESOURCES*sizeof(int));
+    need[i] = (int*)malloc(NUMBER_OF_RESOURCES*sizeof(int));
+  }
+  for(int i = 0; i < NUMBER_OF_RESOURCES; i++){
+    available[i] = resources[i];
+    for(int j = 0; j < NUMBER_OF_CUSTOMERS; j++){
+      maximum[j][i] = random_number(resources[i]+1);
+      allocation[j][i] = 0;
+      need[j][i] = maximum[j][i];
+    }
+  }
+  return 0;
+}
+
 int request_resouces(int customer_num, int request[]){
-  int ret = 0;
   pthread_mutex_lock(&mtx);
+  int ret = -1;
+  if(customer_num < 0 || customer_num >= NUMBER_OF_CUSTOMERS) goto EXIT;
+  for(int i = 0; i < NUMBER_OF_RESOURCES; i++)
+    if(request[i] < 0 || request[i] > need[customer_num][i]) goto EXIT;
+
   int *work = (int*)malloc(NUMBER_OF_RESOURCES*sizeof(int));
   memcpy(work, available, NUMBER_OF_RESOURCES*sizeof(int));
   bool *finish=(bool*)malloc(NUMBER_OF_CUSTOMERS*sizeof(bool));
@@ -30,18 +62,42 @@ int request_resouces(int customer_num, int request[]){
       }
     }
   }
+  bool allowed = true;
   for(int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
     if(!finish[i]){
-      ret = -1;
+      allowed = false;
       break;
     }
   }
+  if(allowed){
+    for(int i = 0; i < NUMBER_OF_RESOURCES; i++){
+      available[i] -= request[i];
+      allocation[customer_num][i] += request[i];
+      need[customer_num][i] -= request[i];
+    }
+    ret = 0;
+  }
+  free(work);
+  free(finish);
+EXIT:
   pthread_mutex_unlock(&mtx);
   return ret;
 }
 
 int release_resouces(int customer_num, int request[]){
   pthread_mutex_lock(&mtx);
+  int ret = -1;
+  if(customer_num < 0 || customer_num >= NUMBER_OF_CUSTOMERS) goto EXIT;
+  for(int i = 0; i < NUMBER_OF_RESOURCES; i++)
+    if(request[i] < 0 || request[i] > allocation[customer_num][i]) goto EXIT;
+  
+  for(int i = 0; i < NUMBER_OF_RESOURCES; i++){
+    available[i] += request[i];
+    allocation[customer_num][i] -= request[i];
+    need[customer_num][i] += request[i];
+  }
+  ret = 0;
+EXIT:
   pthread_mutex_unlock(&mtx);
-  return 0;
+  return ret;
 }
