@@ -31,6 +31,13 @@ int init_banker(int number_of_customers, int number_of_resources, int resources[
       need[j][i] = maximum[j][i];
     }
   }
+  printf("maximum: \n");
+  for(int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
+    printf("    ");
+    for(int j = 0; j < NUMBER_OF_RESOURCES; j++)
+      printf("%d ", maximum[i][j]);
+    printf("\n");
+  }
   return 0;
 }
 
@@ -41,8 +48,9 @@ int request_resources(int customer_num, int request[]){
   for(int i = 0; i < NUMBER_OF_RESOURCES; i++)
     if(request[i] < 0 || request[i] > need[customer_num][i]) goto EXIT;
 
-  bool allowed = true;
+  bool allowed = true, zero_req = true;
   for(int i = 0; i < NUMBER_OF_RESOURCES; i++){
+    if(request[i]) zero_req = false;
     if(request[i] > available[i]){
       allowed = false;
       goto DECIDE;
@@ -56,6 +64,28 @@ int request_resources(int customer_num, int request[]){
     work[i] -= request[i];
     allocation[customer_num][i] += request[i];
     need[customer_num][i] -= request[i];
+  }
+  if(!zero_req){
+    printf("Start calculation, request: ");
+    for(int i = 0; i < NUMBER_OF_RESOURCES; i++)
+      printf("%d ", request[i]);
+    printf("\nwork: \n    ");
+    for(int i = 0; i < NUMBER_OF_RESOURCES; i++)
+      printf("%d ", work[i]);
+    printf("\nallocation: \n");
+    for(int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
+      printf("    ");
+      for(int j = 0; j < NUMBER_OF_RESOURCES; j++)
+        printf("%d ", allocation[i][j]);
+      printf("\n");
+    }
+    printf("need: \n");
+    for(int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
+      printf("    ");
+      for(int j = 0; j < NUMBER_OF_RESOURCES; j++)
+        printf("%d ", need[i][j]);
+      printf("\n");
+    }
   }
   for(int i = 0; i < NUMBER_OF_CUSTOMERS; i++){
     for(int j = 0; j < NUMBER_OF_CUSTOMERS; j++){
