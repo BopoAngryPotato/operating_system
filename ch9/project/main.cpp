@@ -1,4 +1,3 @@
-#include <string>
 #include <iostream>
 #include "allocator.h"
 extern "C" {
