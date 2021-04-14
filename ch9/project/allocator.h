@@ -18,7 +18,10 @@ class Allocator{
     };
 
     std::vector<std::string> parseCmd(const std::string&);
+    void request(const std::vector<std::string>&);
     void status(const std::vector<std::string>&) const;
+
+    bool checkConsistent() const;
 
     unsigned int max;
     std::list<Block> record;
