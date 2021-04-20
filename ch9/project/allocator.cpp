@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #define REQUEST "RQ"
+#define RELEASE "RL"
 #define STATUS "STAT"
 #define EXIT "X"
 #define SPACE ' '
@@ -28,6 +29,7 @@ void Allocator::run(){
     }
     if(params.empty()) continue;
     if(params[0] == REQUEST) request(params);
+    else if(params[0] == RELEASE) release(params);
     else if(params[0] == STATUS) status(params);
     else if(params[0] == EXIT) continue;
     else cout << "Invalid command\n";
@@ -105,13 +107,49 @@ void Allocator::request(const std::vector<string>& params){
     }
   }
   if(blk == record.end()){
-    cout << "No block found. Rejected.\n";
+    cout << "No block available. Reject.\n";
     return;
   }
   Block n_blk{blk->first, blk->first + space - 1, params[1], true};
   blk->first = n_blk.last + 1;
   record.insert(blk, n_blk);
   cout << "Allocated.\n";
+}
+
+void Allocator::release(const std::vector<string>& params){
+  if(!checkConsistent()) return;
+  if(params.size() < 2){
+    cout << "Insufficient arguments.\n";
+    return;
+  }
+  list<Block>::iterator target = record.end();
+  for(list<Block>::iterator itr = record.begin(); itr != record.end(); itr++){
+    if((*itr).process == params[1]){
+      target = itr;
+      break;
+    }
+  }
+  if(target == record.end()){
+    cout << "No process found.\n";
+  }
+  target->used = false;
+  target->process = "";
+  if(target != record.begin()){
+    list<Block>::iterator pre = target;
+    pre--;
+    if(pre->used == false){
+      target->first = pre->first;
+      record.erase(pre);
+    }
+  }
+  if(target != --record.end()){
+    list<Block>::iterator su = target;
+    su++;
+    if(su->used == false){
+      su->first = target->first;
+      record.erase(target);
+    }
+  }
 }
 
 void Allocator::status(const std::vector<string>& params) const{
