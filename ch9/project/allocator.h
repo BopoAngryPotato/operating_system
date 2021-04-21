@@ -20,6 +20,7 @@ class Allocator{
     std::vector<std::string> parseCmd(const std::string&);
     void request(const std::vector<std::string>&);
     void release(const std::vector<std::string>&);
+    void compact(const std::vector<std::string>&);
     void status(const std::vector<std::string>&) const;
 
     bool checkConsistent() const;

@@ -7,6 +7,7 @@ extern "C" {
 
 #define REQUEST "RQ"
 #define RELEASE "RL"
+#define COMPACT "C"
 #define STATUS "STAT"
 #define EXIT "X"
 #define SPACE ' '
@@ -30,6 +31,7 @@ void Allocator::run(){
     if(params.empty()) continue;
     if(params[0] == REQUEST) request(params);
     else if(params[0] == RELEASE) release(params);
+    else if(params[0] == COMPACT) compact(params);
     else if(params[0] == STATUS) status(params);
     else if(params[0] == EXIT) continue;
     else cout << "Invalid command\n";
@@ -131,6 +133,7 @@ void Allocator::release(const std::vector<string>& params){
   }
   if(target == record.end()){
     cout << "No process found.\n";
+    return;
   }
   target->used = false;
   target->process = "";
@@ -150,6 +153,31 @@ void Allocator::release(const std::vector<string>& params){
       record.erase(target);
     }
   }
+}
+
+void Allocator::compact(const std::vector<string>& params){
+  if(!checkConsistent()) return;
+  list<Block> compacted;
+  for(list<Block>::const_iterator itr = record.begin(); itr != record.end(); itr++){
+    if(itr->used){
+      list<Block>::const_reverse_iterator tail = compacted.crbegin();
+      unsigned int first, last;
+      if(tail != compacted.crend()){
+        first = tail->last + 1;
+        last = first + itr->last - itr->first;
+      }
+      else{
+        first = 0;
+        last = itr->last - itr->first;
+      }
+      compacted.push_back({first, last, itr->process, true});
+    }
+  }
+  list<Block>::const_reverse_iterator tail = compacted.crbegin();
+  unsigned int remain = 0;
+  if(tail != compacted.crend()) remain = tail->last + 1;
+  if(remain < max) compacted.push_back({remain, max - 1, "", false});
+  record = move(compacted);
 }
 
 void Allocator::status(const std::vector<string>& params) const{
